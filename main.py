@@ -1,5 +1,14 @@
 import sys
-import math
+
+def h_a(s):
+    if s:
+        return sum(b * (i + 1) for i, b in enumerate(s.encode())) & 0xFFFFFFFF
+    return 0
+
+def h_b(s):
+    if s:
+        return sum(b ^ (i + 1) for i, b in enumerate(s.encode())) & 0xFFFFFFFF
+    return 0
 
 out = []
 for raw in sys.stdin:
@@ -7,24 +16,15 @@ for raw in sys.stdin:
     if not line:
         continue
     parts = line.split()
-
-    if parts[0] == "OPTIMAL":
-        p = float(parts[1])
-        n = float(parts[2])
-        m_opt = math.ceil(-n * math.log(p) / (math.log(2) ** 2))
-        k_opt = max(1, round((m_opt / n) * math.log(2)))
-        out.append(f"m={m_opt} k={k_opt}")
-
-    elif parts[0] == "FP":
-        m = float(parts[1])
-        n = float(parts[2])
-        k = float(parts[3])
-        fp = (1 - math.exp(-k * n / m)) ** k
-        out.append(f"{fp:.6f}")
-
-    elif parts[0] == "BPI":
-        p = float(parts[1])
-        bpi = -math.log(p) / (math.log(2) ** 2)
-        out.append(f"{bpi:.4f}")
+    if parts[0] == "HASH":
+        s, m, k = parts[1], int(parts[2]), int(parts[3])
+        ha = h_a(s)
+        hb = h_b(s)
+        positions = [str((ha + i * hb) % m) for i in range(k)]
+        out.append(",".join(positions))
+    elif parts[0] == "HA":
+        out.append(str(h_a(parts[1])))
+    elif parts[0] == "HB":
+        out.append(str(h_b(parts[1])))
 
 sys.stdout.write("\n".join(out) + "\n")
